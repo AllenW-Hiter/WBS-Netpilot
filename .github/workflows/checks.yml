@@ -32,5 +32,6 @@ jobs:
         run: ./network_setup.sh --dry-run --plan examples/client_static.json
       - name: Offline examples
         run: ./network_setup.sh --demo
-      - name: Release checksums
+      - name: Development checksums
+        if: github.ref == 'refs/heads/dev' || github.base_ref == 'dev'
         run: sha256sum -c SHA256SUMS.txt
