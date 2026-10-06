@@ -13,6 +13,7 @@ import urllib.parse
 from .common import (STATE, UserError, as_operator, ask, atomic_write,
                      choose, confirm, ensure_packages, https_test, load_json, operator_account,
                      require_root, safe_directory, save_json, timestamp, run, file_lock)
+from .github_ssh import GitHubSSH
 
 APT_FILE = pathlib.Path("/etc/apt/apt.conf.d/99-netpilot-proxy")
 APT_MARKER = "// Managed by NetPilot; remove only this file to stop the override.\n"
@@ -441,8 +442,9 @@ class ProxyManager:
 
     def menu(self):
         while True:
-            item = choose("应用代理管理", ["配置/更新", "测试当前代理", "安装/更新终端代理开关函数", "清理旧 APT / Git 代理配置", "移除本用户代理配置"])
+            item = choose("应用代理管理", ["配置/更新", "测试当前代理", "安装/更新终端代理开关函数", "清理旧 APT / Git 代理配置", "移除本用户代理配置", "配置当前用户 GitHub SSH 密钥"])
             {"配置/更新": self.configure, "测试当前代理": self.test,
              "安装/更新终端代理开关函数": self.install_bash_loader,
              "清理旧 APT / Git 代理配置": self.cleanup_legacy,
-             "移除本用户代理配置": self.remove}[item]()
+             "移除本用户代理配置": self.remove,
+             "配置当前用户 GitHub SSH 密钥": lambda: GitHubSSH().configure()}[item]()

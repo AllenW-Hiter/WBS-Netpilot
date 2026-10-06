@@ -10,14 +10,15 @@ MODE="${1:-menu}"
 for arg in "$@"; do
   case "$arg" in
     --dry-run|--help|-h|--version|--check|--status|--diagnose|--demo|--self-test) MODE="$arg"; break ;;
-    proxy-run|proxy-apt-on|proxy-apt-off|proxy-cleanup) MODE="$arg"; break ;;
+    proxy-run|proxy-apt-on|proxy-apt-off|proxy-cleanup|github-ssh) MODE="$arg"; break ;;
   esac
 done
 
 # These entries do not install packages or escalate privileges in the bootstrap.
 # Proxy functions explicitly invoke their APT helper with sudo; cleanup needs sudo.
+# The GitHub SSH wizard writes only the calling user's files and needs no sudo.
 case "$MODE" in
-  --help|-h|help|--version|--status|--diagnose|--demo|--dry-run|--check|proxy-run|proxy-apt-on|proxy-apt-off|proxy-cleanup|--self-test)
+  --help|-h|help|--version|--status|--diagnose|--demo|--dry-run|--check|proxy-run|proxy-apt-on|proxy-apt-off|proxy-cleanup|github-ssh|--self-test)
     if [[ ! -x "$PY" ]]; then echo "缺少 /usr/bin/python3；此只读模式不会自动安装。" >&2; exit 1; fi
     exec "$PY" "$ROOT/netpilot.py" "$@" ;;
 esac

@@ -27,6 +27,7 @@ from netpilot_lib.network import (build_settings, candidates, client_plan, defau
 from netpilot_lib.nm import (CON_IFACE, NM, Transactions, decode_typed,
     settings_to_dbus)
 from netpilot_lib.proxy import ProxyManager
+from netpilot_lib.github_ssh import GitHubSSH
 from netpilot_lib.routes import RouteActions
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -452,7 +453,7 @@ def parser():
     p.add_argument("--plan", type=pathlib.Path, help="导入 schema=1 JSON 计划；密码在实机应用时单独输入")
     p.add_argument("--self-test", action="store_true", help="运行离线单元测试（不修改系统网络）")
     p.add_argument("--timeout", type=int, default=180, help="试运行自动回滚秒数，120～900，默认 180")
-    p.add_argument("command", nargs="?", default="menu", choices=["menu", "host", "client", "uplink", "confirm", "rollback", "route-on", "route-off", "proxy", "proxy-run", "proxy-apt-on", "proxy-apt-off", "proxy-cleanup", "backup", "restore"])
+    p.add_argument("command", nargs="?", default="menu", choices=["menu", "host", "client", "uplink", "confirm", "rollback", "route-on", "route-off", "proxy", "proxy-run", "proxy-apt-on", "proxy-apt-off", "proxy-cleanup", "github-ssh", "backup", "restore"])
     p.add_argument("args", nargs=argparse.REMAINDER)
     return p
 
@@ -498,6 +499,8 @@ def main(argv=None):
             wait_confirmation(manager, record)
     elif args.command == "proxy":
         ProxyManager().menu()
+    elif args.command == "github-ssh":
+        GitHubSSH().configure()
     elif args.command in ("proxy-apt-on", "proxy-apt-off"):
         ProxyManager().set_apt(args.command == "proxy-apt-on")
     elif args.command == "proxy-cleanup":
