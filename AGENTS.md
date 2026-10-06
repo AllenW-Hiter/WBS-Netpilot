@@ -2,6 +2,8 @@
 
 本项目修改真实网络。开发时先阅读 README、docs/09_开发与发布.md 和 docs/07_诊断与故障处理.md。
 
+继续已有开发时，同时阅读 [handoff.md](handoff.md)，以当前检出的源码和提交记录为准。
+
 ## 不可破坏的边界
 
 - 测试不修改开发机网络，不运行真实 apt 安装、nmcli 写操作、iptables/nft 清空或 netplan apply。
