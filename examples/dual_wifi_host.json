@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "role": "host",
+  "interface": "wlan1",
+  "kind": "wifi",
+  "method": "shared",
+  "name": "NP-HOST-wlan1",
+  "address": "192.168.50.20/24",
+  "gateway": "",
+  "on_demand_gateway": "",
+  "dns": [],
+  "autoconnect": true,
+  "ipv6": "disabled",
+  "dhcp_range": "",
+  "uplink_hint": "wlan0",
+  "wifi": {
+    "mode": "ap",
+    "ssid": "NetPilot-AP",
+    "security": "wpa2",
+    "band": "bg",
+    "channel": 0,
+    "hidden": false
+  },
+  "notes": [
+    "wlan0/wlan1 仅为示例；必须是两个独立物理 phy，热点网卡须支持 AP。",
+    "密码只在交互应用时输入，不存于此计划。下游默认建议全部 DHCP。"
+  ]
+}

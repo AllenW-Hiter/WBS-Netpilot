@@ -1,0 +1,22 @@
+# This is documentation, NOT pip requirements and NOT an unconditional apt batch.
+# The launcher checks and asks before installing missing base packages.
+# Base (Ubuntu/Debian APT package names):
+python3
+python3-dbus
+network-manager
+iproute2
+dbus
+systemd
+# Selected feature dependencies; installed only when the feature asks:
+wpasupplicant
+iw
+rfkill
+dnsmasq-base
+curl
+ca-certificates
+# Optional wired duplicate-address diagnostic:
+iputils-arping
+# Optional tools for manual diagnosis, not all auto-installed by this release:
+# iputils-ping
+# ethtool
+# dnsutils

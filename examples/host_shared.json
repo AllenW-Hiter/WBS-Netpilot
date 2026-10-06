@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "role": "host",
+  "interface": "enp89s0",
+  "kind": "ethernet",
+  "method": "shared",
+  "name": "NP-HOST-enp89s0",
+  "address": "192.168.1.20/24",
+  "client_address_hint": "192.168.1.30/24",
+  "gateway": "",
+  "on_demand_gateway": "",
+  "dns": [],
+  "autoconnect": true,
+  "ipv6": "disabled",
+  "dhcp_range": "192.168.1.100,192.168.1.199",
+  "uplink_hint": "wlp0s20f3",
+  "notes": [
+    "这是有线共享主机示例，接口需按实际机器重新选择，且先建立可用上行。",
+    "自定义地址池要求本机 NetworkManager 支持 shared-dhcp-range；不支持时请使用交互向导的兼容选择。",
+    "共享出口跟随主机系统路由；没有针对下游锁定该 Wi-Fi 或强制 VPN。"
+  ]
+}

@@ -1,0 +1,57 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+
+# Editors and local tool settings
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+.agents/
+.codex/
+
+# Local credentials and environment
+.env
+.env.*
+!.env.example
+.ssh/
+*.key
+*.pem
+*.p12
+*.pfx
+*.nmconnection
+
+# Network runtime data, backups and real reports
+netpilot-exports/
+backups/
+runtime/
+state/
+.config/netpilot/
+proxy.json
+proxy.sh
+proxy.before-*
+legacy-proxy-*/
+bashrc.before-*
+backup-file-list.txt
+network-*.tar.gz
+diagnostics-*.json
+managed.json
+routes.json
+audit.jsonl
+*.log
+
+# Generated validation and release artifacts
+test-results/
+dist/
+build/
+*.egg-info/

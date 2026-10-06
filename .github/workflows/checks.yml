@@ -1,0 +1,36 @@
+name: Offline checks
+
+on:
+  push:
+    branches: [main, dev]
+    tags: ['v*']
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Unit tests
+        run: /usr/bin/python3 -m unittest discover -s tests -v
+      - name: Python syntax
+        run: /usr/bin/python3 -m compileall -q netpilot.py netpilot_lib tests
+      - name: Bash syntax
+        run: bash -n network_setup.sh
+      - name: Read-only environment check
+        run: ./network_setup.sh --check
+      - name: Static plan preview
+        run: ./network_setup.sh --dry-run --plan examples/client_static.json
+      - name: Offline examples
+        run: ./network_setup.sh --demo
+      - name: Release checksums
+        run: sha256sum -c SHA256SUMS.txt

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "role": "client",
+  "interface": "end1",
+  "kind": "ethernet",
+  "method": "manual",
+  "name": "DEVICE-NETWORK",
+  "address": "192.168.1.30/24",
+  "gateway": "",
+  "on_demand_gateway": "192.168.1.20",
+  "dns": ["192.168.1.20"],
+  "autoconnect": true,
+  "ipv6": "disabled",
+  "dhcp_range": "",
+  "uplink_hint": "",
+  "notes": [
+    "这是静态地址从机示例，不是当前设备已验证的配置。",
+    "默认不保存网关；通过 route-on/route-off 管理本工具自己的临时路径。",
+    "固定 .30 必须避开网关 DHCP 地址池或有明确保留；自动 DHCP 池不保证这一点。"
+  ]
+}
