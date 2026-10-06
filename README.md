@@ -50,4 +50,4 @@ git switch --track origin/dev
 
 版本变化见 [CHANGELOG.md](CHANGELOG.md)。
 
-继续开发前阅读 [handoff.md](handoff.md)，了解已有实现、验证范围和待办。
+`AGENTS.md`、`CLAUDE.md`、`SHA256SUMS.txt` 和 `handoff.md` 为 `dev` 专用文件，不随 `main` 发布。继续开发前阅读 [dev 分支的交接文档](https://github.com/AllenW-Hiter/WBS-Netpilot/blob/dev/handoff.md)，了解已有实现、验证范围和待办。
