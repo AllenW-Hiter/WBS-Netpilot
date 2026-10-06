@@ -2,14 +2,14 @@
 
 基于 NetworkManager 的 Linux 网络配置工具，用于主机共享、从机接入、本机上行、临时路由和应用代理。
 
-**发布版本：0.1.0。** 面向 Ubuntu 22.04/24.04 和使用 NetworkManager 的 Debian 系系统。离线测试通过；真实网卡、无线驱动和端到端联网需在目标设备验收。
+**开发版本：0.1.1.dev0。** 面向 Ubuntu 22.04/24.04 和使用 NetworkManager 的 Debian 系系统。离线测试通过；真实网卡、无线驱动和端到端联网需在目标设备验收。
 
 ## 快速开始
 
 保留完整项目目录，使用系统 Python；需要写系统配置时，启动器会调用 sudo。安装缺失依赖前会询问，需要已有可用上行。
 
 ```bash
-git clone --branch main https://github.com/AllenW-Hiter/WBS-Netpilot.git
+git clone --branch dev https://github.com/AllenW-Hiter/WBS-Netpilot.git
 cd WBS-Netpilot
 ./network_setup.sh --check
 ./network_setup.sh --demo
