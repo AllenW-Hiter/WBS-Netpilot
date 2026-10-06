@@ -8,6 +8,8 @@
 
 `AGENTS.md`、`CLAUDE.md`、`SHA256SUMS.txt` 和 `handoff.md` 仅保留在 `dev`。准备合入 `main` 时，在发布提交中移除这四个文件，并检查文档引用；不得让后续合并重新带入。同步 `main` 的公共变更回 `dev` 时，保留这四个开发专用文件并重算校验清单。
 
+`main` 的 README 不保留“使用边界”章节，相关操作说明保留在对应教程中。实验室机器人环境教程位于 `docs/robot_env_creat/`，按任务描述、软件执行步骤和验证结果编写。
+
 ## 不可破坏的边界
 
 - 测试不修改开发机网络，不运行真实 apt 安装、nmcli 写操作、iptables/nft 清空或 netplan apply。
