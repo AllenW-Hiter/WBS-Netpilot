@@ -18,13 +18,15 @@ from .github_ssh import GitHubSSH
 from .proxy import ProxyManager
 from .proxy_profiles import ProfileManager, source_name
 from .ssh_tunnel import SSHTunnel
+from .autodl import dispatch as autodl_dispatch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ALIASES = {"codex-ssh": "ssh-menu", "codex-tunnel": "ssh-tunnel", "codex-proxy": "ssh-proxy", "codex-proxy-test": "ssh-proxy-test"}
 COMMANDS = ["menu", "network", "proxy", "git-keys", "host", "client", "uplink", "profiles", "confirm", "rollback", "route-on", "route-off",
             "backup", "restore", "network-import", "shared-stop", "wifi-on", "route-status", "github-ssh", "wire-proxy", "ssh-proxy", "proxy-status", "proxy-remove",
             "ssh-menu", "ssh-tunnel", "ssh-tunnel-config", "wire-proxy-test", "ssh-proxy-test", "proxy-session-on", "proxy-session-off",
-            "proxy-run", "wire-proxy-run", "ssh-proxy-run", "proxy-apt-on", "proxy-apt-off", "proxy-cleanup", *ALIASES]
+            "proxy-run", "wire-proxy-run", "ssh-proxy-run", "proxy-apt-on", "proxy-apt-off", "proxy-cleanup",
+            "autodl", "autodl-setup", "autodl-start", "autodl-status", "autodl-stop", *ALIASES]
 
 
 @dataclass(frozen=True)
@@ -145,13 +147,14 @@ def menu(timeout=180):
     print("NetPilot " + __version__)
     while True:
         try:
-            action = choose("主菜单", ["网络设置与检测", "网络代理与检测", "Git SSH 密钥辅助"])
+            action = choose("主菜单", ["网络设置与检测", "网络代理与检测", "Git SSH 密钥辅助", "AutoDL 自动配置"])
         except Cancelled:
             return
         try:
             if action == "网络设置与检测": network_menu(timeout)
             elif action == "网络代理与检测": ProfileManager().menu()
-            else: git_menu()
+            elif action == "Git SSH 密钥辅助": git_menu()
+            else: autodl_dispatch("autodl", [])
         except Cancelled:
             pass
         except (UserError, OSError, ValueError) as exc:
@@ -177,6 +180,8 @@ def parser():
 
 def operation(args, command):
     timeout = args.timeout
+    if command.startswith("autodl"):
+        return Operation(lambda: autodl_dispatch(command, args.args))
     if command in ("proxy-session-on", "proxy-session-off", "proxy-remove"):
         source = source_name(args.args[0])
         manager = ProfileManager()
@@ -218,7 +223,8 @@ def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     args = parser().parse_args(argv)
     command = ALIASES.get(args.command, args.command)
-    remainder = {"confirm", "rollback", "proxy-run", "wire-proxy-run", "ssh-proxy-run", "proxy-session-on", "proxy-session-off", "proxy-remove"}
+    remainder = {"confirm", "rollback", "proxy-run", "wire-proxy-run", "ssh-proxy-run", "proxy-session-on", "proxy-session-off", "proxy-remove",
+                 "autodl", "autodl-setup", "autodl-start", "autodl-status", "autodl-stop"}
     if args.args and command not in remainder:
         raise UserError("子命令后有未识别参数；全局选项必须放在子命令前。")
     if command in ("confirm", "rollback", "proxy-session-on", "proxy-session-off", "proxy-remove") and len(args.args) != 1:

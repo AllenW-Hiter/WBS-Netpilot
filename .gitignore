@@ -74,6 +74,10 @@ ssh-proxy.json
 ssh-proxy.sh
 ssh-tunnel.json
 ssh-tunnel.before-*
+autodl.json
+autodl.lock
+autodl-owner.json
+autodl-cli
 profiles-backup-*/
 proxy-session.json
 proxy-session.lock

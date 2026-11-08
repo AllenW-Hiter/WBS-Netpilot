@@ -10,6 +10,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 import urllib.parse
 import uuid
 
@@ -22,7 +23,7 @@ from .proxy_shell import BASH_BEGIN, BASH_END, profile_script
 from .ssh_tunnel import SSHTunnel
 
 SOURCES = ("wire", "ssh")
-HELPER = ["/usr/bin/python3", str(pathlib.Path(__file__).resolve().parents[1] / "netpilot.py")]
+HELPER = [sys.executable, str(pathlib.Path(__file__).resolve().parents[1] / "netpilot.py")]
 
 
 def source_name(source):
