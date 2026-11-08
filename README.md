@@ -2,7 +2,7 @@
 
 Linux 网络设置、网络代理与 Git SSH 密钥辅助工具。网络设置基于 NetworkManager；代理和密钥入口可独立使用。
 
-**开发版本：0.1.4.dev0。** 面向 Ubuntu 22.04/24.04 和 Debian 系系统；只有网卡配置功能要求 NetworkManager。真实网卡、无线驱动和端到端联网需在目标设备验收。
+**开发版本：0.1.5.dev0。** 面向 Ubuntu 22.04/24.04 和 Debian 系系统；只有网卡配置功能要求 NetworkManager。真实网卡、无线驱动和端到端联网需在目标设备验收。
 
 ## 快速开始
 
@@ -34,6 +34,8 @@ AutoDL 可直接运行 `./network_setup.sh autodl-setup`，或传入登录指令
 ```
 
 密码随后隐藏输入，不接受明文密码参数；自动化可通过 `--password-stdin` 从标准输入提供。可重复添加不同服务器，共用本机代理端口并同时保持隧道。`autodl-status` 查看全部服务器及编号，`autodl-start --server 编号` 重连指定服务器，`autodl-stop --server 编号` 恢复指定服务器的本工具联动并停止其连接；只有一台时可省略编号，菜单中可直接选择。APT/Git 默认不联动，详见[SSH 代理教程](docs/02_远程服务器SSH代理.md)。Git 密钥向导支持 AutoDL 的 root 用户，密钥保存在其自身的 `/root/.ssh`。
+
+本机代理软件换端口后，使用 AutoDL 子菜单 **5. 修改本机代理端口**，或 `autodl-edit --server 编号 --local-port 新端口` 保存，再重连生效。修改支持断线状态，保留远端代理地址和 APT/Git 恢复记录；若隧道仍在运行，会关闭所选服务器的旧隧道。
 
 ## 使用教程
 

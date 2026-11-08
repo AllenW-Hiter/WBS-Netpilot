@@ -39,7 +39,7 @@ def server_id(plan):
 def validate_state(data):
     if isinstance(data, dict) and "forwarded" not in data:
         data = dict(data, forwarded=data.get("phase") in ("installing", "active"))
-    if not isinstance(data, dict) or set(data) != {"schema", "plan", "phase", "control", "result", "owner_id", "forwarded"} or type(data["schema"]) is not int or data["schema"] != 1 or type(data["forwarded"]) is not bool or data["phase"] not in ("connecting", "forwarding", "installing", "active", "partial", "stopped"):
+    if not isinstance(data, dict) or set(data) != {"schema", "plan", "phase", "control", "result", "owner_id", "forwarded"} or type(data["schema"]) is not int or data["schema"] != 1 or type(data["forwarded"]) is not bool or data["phase"] not in ("connecting", "forwarding", "installing", "active", "partial", "stopped", "ready"):
         raise UserError("AutoDL 会话记录无效，未猜测连接归属。")
     if not isinstance(data["owner_id"], str) or len(data["owner_id"]) != 32 or any(c not in "0123456789abcdef" for c in data["owner_id"]):
         raise UserError("AutoDL 归属编号无效。")
@@ -211,7 +211,7 @@ class AutoDL:
         if len(records) == 1:
             return next(iter(records))
         phases = {"connecting": "正在连接", "forwarding": "正在建立转发", "installing": "正在部署",
-                  "active": "已配置", "partial": "部分完成", "stopped": "已停止"}
+                  "active": "已配置", "partial": "部分完成", "stopped": "已停止", "ready": "端口已修改，待重连"}
         return choose("选择 AutoDL 服务器", sorted(records), lambda key: "{}，SSH 端口 {} [{}；{}]".format(
             records[key]["plan"]["destination"], records[key]["plan"]["ssh_port"], key, phases[records[key]["phase"]]))
 
@@ -219,7 +219,7 @@ class AutoDL:
         key = server_id(plan)
         old = self.load(key)
         if old and self.alive(old):
-            raise UserError("该服务器已有本工具的 SSH 连接（编号 {}）；重试部署用 autodl-start --server {}，修改配置前用 autodl-stop --server {}。其他服务器可直接添加。".format(key, key, key))
+            raise UserError("该服务器已有本工具的 SSH 连接（编号 {}）；重试部署用 autodl-start --server {}，修改本机端口用 autodl-edit --server {}。其他配置请先停止这一台再修改。".format(key, key, key))
         if old and old["phase"] != "stopped" and (old["plan"]["apt"] or old["plan"]["git"]) and PLAN_KEYS <= plan.keys() and old["plan"] != plan:
             raise UserError("该服务器旧配置的 APT/Git 恢复尚未确认；请先用 autodl-start --server {} 重连，再停止后修改配置。".format(key))
         return old
@@ -256,6 +256,8 @@ class AutoDL:
     def cleanup_control(self, data):
         root = self.control_path(data).parent
         if root.exists():
+            if {path.name for path in root.iterdir()} - {"control.sock", "owner.json"}:
+                raise UserError("SSH 控制目录含有其他文件，未清理；请检查后重试。")
             for name in ("control.sock", "owner.json"):
                 (root / name).unlink(missing_ok=True)
             root.rmdir()
@@ -327,7 +329,7 @@ done
                 self.cleanup_control(old)
             root = pathlib.Path(tempfile.mkdtemp(prefix="netpilot-autodl-"))
             save_json(root / "owner.json", plan)
-            owner_id = old["owner_id"] if old and old["plan"] == plan and old["phase"] != "stopped" else uuid.uuid4().hex
+            owner_id = old["owner_id"] if old and old["plan"] == plan else uuid.uuid4().hex
             data = dict(schema=1, plan=plan, phase="connecting", control=str(root), result=None, owner_id=owner_id, forwarded=False)
             self.save(data)
             try:
@@ -384,6 +386,36 @@ done
             return
         self.setup(data["plan"], password_input(from_stdin))
 
+    def edit(self, local_port, selected=None, *, expected=None):
+        local_port = port_number(local_port, minimum=1)
+        safe_directory(self.directory)
+        with file_lock(self.directory / "autodl.lock"):
+            data = self.load(selected)
+            if not data:
+                raise UserError("未找到目标服务器配置；编号见 autodl-status。")
+            if expected is not None and data != expected:
+                raise UserError("服务器记录已变化，请重新查看配置后再修改。")
+            if data["plan"]["local_port"] == local_port:
+                print("本机代理端口未变化，保留当前连接。")
+                return data
+            plan = validate_plan(dict(data["plan"], local_port=local_port))
+            try:
+                if self.alive(data) and self.control(data, "exit").returncode:
+                    raise UserError("无法确认旧 SSH 连接关闭，原端口和归属记录已保留。")
+                self.cleanup_control(data)
+            except BaseException:
+                data["phase"] = "partial"
+                self.save(data)
+                raise
+            # The remote proxy endpoint and APT/Git fingerprint do not change.
+            # Retain ownership so a disconnected server can recover using the new port.
+            data.update(plan=plan, phase="ready", forwarded=False, result=None)
+            self.save(data)
+        key = server_id(plan)
+        print("已保存服务器 {} 的本机代理端口：{}；待重连生效。".format(key, local_port))
+        print("远端代理地址及 APT/Git 选项保留；重连：./network_setup.sh autodl-start --server " + key)
+        return data
+
     def stop(self, selected=None):
         safe_directory(self.directory)
         with file_lock(self.directory / "autodl.lock"):
@@ -422,7 +454,9 @@ done
         report = {"configured": bool(records), "servers": []}
         for key, data in sorted(records.items()):
             item = dict(id=key, plan=data["plan"], phase=data["phase"], ssh_connected=self.alive(data), result=data["result"])
-            if not item["ssh_connected"] and data["phase"] != "stopped":
+            if data["phase"] == "ready":
+                item["hint"] = "本机代理端口已修改，待重连生效：autodl-start --server " + key
+            elif not item["ssh_connected"] and data["phase"] != "stopped":
                 item["hint"] = "连接已断开；远端持久代理规则不随断线自动撤销。可重连后关闭，或在远端执行 ssh_proxy_off。"
             report["servers"].append(item)
         print(json.dumps(report, ensure_ascii=False, indent=2))
@@ -436,8 +470,10 @@ class SafeParser(argparse.ArgumentParser):
 
 def dispatch(command, argv, *, from_menu=False):
     parser = SafeParser(prog="./network_setup.sh " + command)
-    if command in ("autodl-start", "autodl-stop", "autodl-status"):
+    if command in ("autodl-start", "autodl-stop", "autodl-status", "autodl-edit"):
         parser.add_argument("--server", help="autodl-status 中的服务器编号；多台服务器时需指定")
+    if command == "autodl-edit":
+        parser.add_argument("--local-port", type=int, help="新的本机代理端口；保持当前代理协议，重连后生效")
     if command in ("autodl-setup", "autodl-start"):
         parser.add_argument("--password-stdin", action="store_true", help="从标准输入读取一行密码，不保存")
     if command == "autodl-setup":
@@ -455,11 +491,11 @@ def dispatch(command, argv, *, from_menu=False):
     if command == "autodl":
         while True:
             try:
-                action = choose("AutoDL 自动配置", ["粘贴 SSH 指令自动配置", "重新连接或重试指定服务器", "查看全部服务器状态", "停止指定服务器连接"])
+                action = choose("AutoDL 自动配置", ["粘贴 SSH 指令自动配置", "重新连接或重试指定服务器", "查看全部服务器状态", "停止指定服务器连接", "修改本机代理端口"])
             except Cancelled:
                 return
             try:
-                dispatch({"粘贴 SSH 指令自动配置": "autodl-setup", "重新连接或重试指定服务器": "autodl-start", "查看全部服务器状态": "autodl-status", "停止指定服务器连接": "autodl-stop"}[action], [], from_menu=True)
+                dispatch({"粘贴 SSH 指令自动配置": "autodl-setup", "重新连接或重试指定服务器": "autodl-start", "查看全部服务器状态": "autodl-status", "停止指定服务器连接": "autodl-stop", "修改本机代理端口": "autodl-edit"}[action], [], from_menu=True)
             except Cancelled:
                 pass
     elif command == "autodl-status":
@@ -468,6 +504,22 @@ def dispatch(command, argv, *, from_menu=False):
         manager.stop(manager.select_server() if from_menu else args.server)
     elif command == "autodl-start":
         manager.start(args.password_stdin, manager.select_server() if from_menu else args.server)
+    elif command == "autodl-edit":
+        selected = manager.select_server() if from_menu else args.server
+        data = manager.load(selected)
+        if not data:
+            raise UserError("未找到目标服务器配置；编号见 autodl-status。")
+        interactive = from_menu or args.local_port is None
+        try:
+            value = args.local_port if args.local_port is not None else int(ask("新的本机代理端口", str(data["plan"]["local_port"])))
+        except ValueError:
+            raise UserError("本机代理端口必须为整数。")
+        value = port_number(value, minimum=1)
+        print("服务器 {}，SSH 端口 {}；{} 代理本机端口：{} → {}。".format(
+            data["plan"]["destination"], data["plan"]["ssh_port"], data["plan"]["scheme"], data["plan"]["local_port"], value))
+        if value != data["plan"]["local_port"] and interactive and not confirm("保存新端口？运行中的这台 SSH 隧道会关闭，随后需重新连接。"):
+            return
+        manager.edit(value, selected, expected=data)
     else:
         interactive = args.ssh is None
         login = parse_ssh_command(args.ssh if args.ssh is not None else ask("粘贴 AutoDL 完整 SSH 登录指令（不要附带密码）"))

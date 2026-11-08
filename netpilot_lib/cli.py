@@ -26,7 +26,7 @@ COMMANDS = ["menu", "network", "proxy", "git-keys", "host", "client", "uplink", 
             "backup", "restore", "network-import", "shared-stop", "wifi-on", "route-status", "github-ssh", "wire-proxy", "ssh-proxy", "proxy-status", "proxy-remove",
             "ssh-menu", "ssh-tunnel", "ssh-tunnel-config", "wire-proxy-test", "ssh-proxy-test", "proxy-session-on", "proxy-session-off",
             "proxy-run", "wire-proxy-run", "ssh-proxy-run", "proxy-apt-on", "proxy-apt-off", "proxy-cleanup",
-            "autodl", "autodl-setup", "autodl-start", "autodl-status", "autodl-stop", *ALIASES]
+            "autodl", "autodl-setup", "autodl-start", "autodl-status", "autodl-stop", "autodl-edit", *ALIASES]
 
 
 @dataclass(frozen=True)
@@ -224,7 +224,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     command = ALIASES.get(args.command, args.command)
     remainder = {"confirm", "rollback", "proxy-run", "wire-proxy-run", "ssh-proxy-run", "proxy-session-on", "proxy-session-off", "proxy-remove",
-                 "autodl", "autodl-setup", "autodl-start", "autodl-status", "autodl-stop"}
+                 "autodl", "autodl-setup", "autodl-start", "autodl-status", "autodl-stop", "autodl-edit"}
     if args.args and command not in remainder:
         raise UserError("子命令后有未识别参数；全局选项必须放在子命令前。")
     if command in ("confirm", "rollback", "proxy-session-on", "proxy-session-off", "proxy-remove") and len(args.args) != 1:
