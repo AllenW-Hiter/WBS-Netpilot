@@ -63,13 +63,24 @@ ssh_proxy_off
 
 ```bash
 ./network_setup.sh autodl-status
-./network_setup.sh autodl-start
-./network_setup.sh autodl-stop
+# 将 SERVER_ID 替换为状态中对应服务器的 id；只有一台时可省略 --server。
+./network_setup.sh autodl-start --server SERVER_ID
+./network_setup.sh autodl-stop --server SERVER_ID
 ```
 
 状态显示本地 SSH 连接和最近一次 HTTPS 验证结果；重新连接需要再次输入密码。SSH 和转发仍在时，`autodl-start` 可直接重试上次未完成的部署。停止会先恢复本功能归属的远端联动，再关闭自己的 SSH 连接；已有远端终端仍需执行 `ssh_proxy_off` 恢复变量。配置或恢复部分失败时保留记录，不报告全部成功。连接已断开且无法确认 APT/Git 恢复时，需要先重连，或在远端手动关闭。
 
-当前每个本地用户管理一组 AutoDL 配置，更换服务器前先停止原连接。若之前的手动隧道已占用 `17890`，先结束原隧道或选择其他端口；自动配置不会接管已有监听，也不会关闭其他 SSH 会话。
+### 多台 AutoDL 同时使用
+
+可反复运行 `autodl-setup` 添加不同服务器，已有隧道继续运行。程序按 SSH 登录目标和 SSH 端口区分服务器；例如同一个 AutoDL 网关下的两个不同登录端口，也会分别保存。
+
+多台远端可共用本机代理 `127.0.0.1:10818`，并各自在自己的 `127.0.0.1:17890` 监听；不同服务器的回环端口互不冲突。分别登录各台远端，运行 `ssh_proxy_on`，然后在各自终端启动需要代理的应用。
+
+`autodl-status` 列出所有服务器的 `id`、登录目标、SSH 端口、连接状态及最近一次 HTTPS 结果。菜单的重连和停止操作会让你选择服务器；命令行保存多台后，必须通过 `--server` 指定要操作的编号。停止或重试只针对所选服务器，APT/Git 联动也分别按各台的选择处理。
+
+旧版单服务器记录可直接沿用，已有隧道无需关闭。同一台服务器重复配置时，会在填写其他选项和密码前提示：部署未完成可选重试；需要修改端口或 APT/Git 选项时先停止这一台，再重新配置。
+
+若同一台远端已有其他手动隧道占用 `17890`，需结束对应手动隧道或选择其他端口；自动配置不会接管已有监听，也不会关闭其他 SSH 会话。
 
 下文保留逐步手动配置方法。
 
@@ -231,6 +242,8 @@ wire_proxy_off
 |---|---|
 | 本机已有代理端口不可达 | 核对 VPN/代理软件是否启动、实际端口和协议 |
 | remote port forwarding failed | 检查远端端口占用及 SSH 转发权限，由管理员核对 `AllowTcpForwarding`、`PermitListen` 等限制 |
+| 添加另一台仍提示“已有本工具的 AutoDL 连接” | 更新至支持多服务器的 0.1.4 或后续版本；无需为添加另一台服务器停止旧隧道 |
+| 提示“该服务器已有本工具的 SSH 连接” | 这是同一登录目标和 SSH 端口；用 `autodl-start --server 编号` 重试部署，或先停止这一台再修改配置 |
 | 自动配置停在 HTTPS 校验，curl=35/28 | 先核对本机代理、所选协议及双 TUN 路由；修复后可用 `autodl-start` 重试，不将 CONNECT 200 当作 HTTPS 已成功 |
 | 远端 connection refused | 检查本机隧道是否仍运行、远端监听端口是否一致 |
 | curl 可用，Git SSH 不可用 | Git SSH 不使用 HTTP 代理变量，见[Git 密钥教程](03_远程服务器Git密钥.md) |
