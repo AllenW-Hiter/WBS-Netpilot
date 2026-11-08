@@ -15,7 +15,7 @@ command -v ssh-keygen
 
 密钥与 Linux 用户绑定。普通用户使用自己的 `~/.ssh`，root 使用 `/root/.ssh`。每台服务器可使用单独的密钥和备注，便于后续撤销。
 
-## 1. 普通用户：运行 NetPilot 向导
+## 1. 在远端运行 NetPilot 向导
 
 在远端项目目录执行：
 
@@ -24,6 +24,8 @@ command -v ssh-keygen
 ```
 
 等同主菜单 **3. Git SSH 密钥辅助 → 配置 GitHub SSH 密钥并辅助授权**，也可运行 `./network_setup.sh git-keys` 进入该菜单。向导不要求 sudo 或 NetworkManager。
+
+AutoDL 默认的 root 用户可直接使用同一向导，密钥保存在 `/root/.ssh`。普通用户使用自己的主目录；由普通用户通过 sudo 启动时，向导仍操作原调用用户的密钥。
 
 | 向导项目 | 建议填写 |
 |---|---|
@@ -52,9 +54,9 @@ command -v ssh-keygen
 
 首次 SSH 连接时，按 [GitHub 官方主机指纹](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints) 核对后再接受。验证成功时会显示 GitHub 账号名称和认证成功提示；GitHub 不提供交互 shell，认证成功的 `ssh -T` 也可能返回退出码 1。
 
-## 3. AutoDL 等默认 root 环境：手动配置
+## 3. 需要手动配置时
 
-当前向导要求普通调用用户。直接以 root 登录且没有普通调用用户时，向导会停止。可切换到实际使用 Git 的普通用户后运行向导；确实需要在 root 下运行 Git 时，使用下面的 OpenSSH 流程。
+普通用户和 root 均可直接使用向导。希望自行管理密钥和 SSH 配置时，也可使用下面的 OpenSSH 流程；所有操作在实际运行 Git 的远端用户下执行。
 
 ### 生成密钥
 
@@ -144,7 +146,7 @@ git clone https://github.com/YOUR_USER/YOUR_REPO.git
 | 连接超时 | 先检查网络和端口可达性；换密钥不能修复不通的网络 |
 | 提示私钥权限过宽 | 确认私钥归当前用户所有，并设置 `chmod 600` |
 | SSH 认证成功，仓库访问失败 | 核对仓库 SSH URL、账号权限和组织授权要求 |
-| root 运行向导被拒绝 | 使用普通用户向导，或按本篇 root 手动流程配置 |
+| 旧版本提示只允许普通用户 | 更新到支持 root 向导的版本，或按本篇手动流程配置 |
 
 预期结果是：远端保留私钥、平台保存公钥、SSH 识别到预期账号，并且 `git ls-remote` 能访问目标仓库。本文未实际生成你的密钥或验证账号授权。
 

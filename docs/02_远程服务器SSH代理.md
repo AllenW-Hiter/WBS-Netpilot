@@ -14,6 +14,65 @@ flowchart LR
 
 此方案为支持代理的终端应用提供出口。它不在远端建立全局 VPN，Git SSH、ICMP/UDP、已有进程和系统服务不会自动使用这些代理变量。`-R` 的转发方向见 [OpenSSH 手册](https://man.openbsd.org/ssh#R)。
 
+## AutoDL 自动配置
+
+本机已有 NetPilot、OpenSSH 和可用的本地代理端口时，可使用主菜单 **4. AutoDL 自动配置 → 粘贴 SSH 指令自动配置**，或在本机项目目录运行：
+
+本功能选择的是应用代理端口，不会切换系统 TUN。若同时运行 Clash 和 v2rayN，填写当前使用的那个端口；多个 TUN 同时开启仍可能影响 SSH 的实际路由，建议只启用需要使用的一个 TUN。
+
+```bash
+./network_setup.sh autodl-setup
+```
+
+按提示分别填写：
+
+| 项目 | 示例 |
+|---|---|
+| 完整 SSH 登录指令 | `ssh -p 2222 root@server.example`，复制 AutoDL 控制台当前提供的指令 |
+| 本机已有代理端口 | `10818`，以本机实际服务为准 |
+| 远端回环端口 | `17890`，需要是未占用的端口 |
+| 协议 | HTTP/混合端口选 `http`；SOCKS5 端口选 `socks5h` |
+| APT/Git 联动 | 两项独立选择，默认否 |
+| 安装缺失依赖 | 明确允许后，才会在远端 root 环境安装缺少的 Python/curl/Git |
+| SSH 密码 | 单独隐藏输入，不附在登录指令后面，不保存 |
+
+程序会建立专属后台 SSH 连接、部署运行文件，检查远端监听仅在回环地址，验证 HTTPS 后安装 `ssh_proxy_on/off`。远端无需预先下载项目，也不会覆盖已有 Git 工作目录。已有 Python 3.10+（包括 Conda）时直接使用；缺少依赖且没有选择允许安装时，会停止并说明原因。依赖安装使用本次 SSH 通道，不写入持久 APT 代理。
+
+运行文件部署后，远端管理入口是 `~/.config/netpilot/autodl-cli`。例如执行 `~/.config/netpilot/autodl-cli git-keys` 可进入 Git 密钥菜单，AutoDL 的 root 用户也可使用。
+
+首次连接会要求核对 SSH 主机指纹。仅解析 SSH 登录目标、`-p` 端口和 `-l` 用户参数，不执行粘贴指令中的远程命令或任意 `-o` 选项。
+
+也可通过命令行提供非敏感参数，再隐藏输入密码：
+
+```bash
+./network_setup.sh autodl-setup --ssh 'ssh -p 2222 root@server.example' --local-port 10818
+```
+
+可选参数为 `--remote-port`、`--scheme`、`--apt`、`--git`、`--install-deps` 和 `--test-url`。非交互调用可用 `--password-stdin` 从标准输入读取一行密码，不提供 `--password` 明文参数。`--accept-new-host` 表示明确允许信任首次主机密钥，已改变的主机密钥仍会被拒绝。
+
+配置完成后，在远端 Bash 手动开启：
+
+```bash
+source ~/.bashrc
+ssh_proxy_on
+# 在本终端启动需要代理的应用。
+ssh_proxy_off
+```
+
+本机使用以下命令管理这组自动配置：
+
+```bash
+./network_setup.sh autodl-status
+./network_setup.sh autodl-start
+./network_setup.sh autodl-stop
+```
+
+状态显示本地 SSH 连接和最近一次 HTTPS 验证结果；重新连接需要再次输入密码。SSH 和转发仍在时，`autodl-start` 可直接重试上次未完成的部署。停止会先恢复本功能归属的远端联动，再关闭自己的 SSH 连接；已有远端终端仍需执行 `ssh_proxy_off` 恢复变量。配置或恢复部分失败时保留记录，不报告全部成功。连接已断开且无法确认 APT/Git 恢复时，需要先重连，或在远端手动关闭。
+
+当前每个本地用户管理一组 AutoDL 配置，更换服务器前先停止原连接。若之前的手动隧道已占用 `17890`，先结束原隧道或选择其他端口；自动配置不会接管已有监听，也不会关闭其他 SSH 会话。
+
+下文保留逐步手动配置方法。
+
 ## 1. 准备本机代理和远端项目
 
 本篇以无认证的本机 HTTP 代理为例：
@@ -172,6 +231,7 @@ wire_proxy_off
 |---|---|
 | 本机已有代理端口不可达 | 核对 VPN/代理软件是否启动、实际端口和协议 |
 | remote port forwarding failed | 检查远端端口占用及 SSH 转发权限，由管理员核对 `AllowTcpForwarding`、`PermitListen` 等限制 |
+| 自动配置停在 HTTPS 校验，curl=35/28 | 先核对本机代理、所选协议及双 TUN 路由；修复后可用 `autodl-start` 重试，不将 CONNECT 200 当作 HTTPS 已成功 |
 | 远端 connection refused | 检查本机隧道是否仍运行、远端监听端口是否一致 |
 | curl 可用，Git SSH 不可用 | Git SSH 不使用 HTTP 代理变量，见[Git 密钥教程](03_远程服务器Git密钥.md) |
 | 找不到 ssh_proxy_on | 确认配置发生在远端当前用户下，并在 Bash 中加载 `~/.bashrc` |

@@ -42,8 +42,6 @@ def without_managed_block(text):
 class GitHubSSH:
     def __init__(self):
         self.account = operator_account()
-        if self.account.pw_uid == 0:
-            raise UserError("请以普通用户运行 GitHub SSH 向导；sudo 启动时会使用原调用用户。")
         self.directory = pathlib.Path(self.account.pw_dir) / ".ssh"
 
     def prepare_directory(self):
