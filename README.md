@@ -1,12 +1,12 @@
 # NetPilot
 
-基于 NetworkManager 的 Linux 网络配置工具，用于主机共享、从机接入、本机上行、临时路由和应用代理。
+Linux 网络设置、网络代理与 Git SSH 密钥辅助工具。网络设置基于 NetworkManager；代理和密钥入口可独立使用。
 
-**开发版本：0.1.2.dev0。** 面向 Ubuntu 22.04/24.04 和使用 NetworkManager 的 Debian 系系统。离线测试通过；真实网卡、无线驱动和端到端联网需在目标设备验收。
+**开发版本：0.1.2.dev0。** 面向 Ubuntu 22.04/24.04 和 Debian 系系统；只有网卡配置功能要求 NetworkManager。真实网卡、无线驱动和端到端联网需在目标设备验收。
 
 ## 快速开始
 
-保留完整项目目录，使用系统 Python；需要写系统配置时，启动器会调用 sudo。安装缺失依赖前会询问，需要已有可用上行。
+保留完整项目目录，使用系统 Python；主菜单以普通用户启动；需要写系统配置的具体操作才调用 sudo。安装缺失依赖前会询问，需要已有可用上行。
 
 ```bash
 git clone --branch dev https://github.com/AllenW-Hiter/WBS-Netpilot.git
@@ -16,28 +16,29 @@ cd WBS-Netpilot
 ./network_setup.sh
 ```
 
-## 功能与教程
+## 三项功能
 
-| 功能 | 使用教程 |
+| 主菜单 | 内容 |
 |---|---|
-| 环境检查、启动、试运行与确认 | [开始使用](docs/01_开始使用.md) |
-| 有线/Wi-Fi 共享、热点、直连管理 | [主机共享与本地管理](docs/02_主机共享与本地管理.md) |
-| DHCP、固定地址、持久/按需网关 | [从机接入](docs/03_从机接入.md) |
-| 本机有线与 Wi-Fi 上行 | [本机上行](docs/04_本机上行.md) |
-| 按需添加、撤销临时默认路由 | [临时联网路由](docs/05_临时联网路由.md) |
-| APT、Git HTTPS、curl 等应用代理 | [应用代理](docs/06_应用代理.md) |
-| 当前用户 GitHub SSH 密钥配置与验证 | [GitHub SSH 密钥](docs/10_GitHub_SSH密钥.md) |
-| 状态查看、诊断、故障处理 | [诊断与故障处理](docs/07_诊断与故障处理.md) |
-| 连接管理、备份恢复、JSON 计划 | [连接管理与备份恢复](docs/08_连接管理与备份恢复.md) |
-| 离线验证、分支及发布流程 | [开发与发布](docs/09_开发与发布.md) |
-| 实验室机器人网络、10808 代理与 GitHub SSH 配置 | [机器人环境配置](docs/robot_env_creat/README.md) |
+| 1. 网络设置与检测 | 主机共享、从机/静态 IP、本机上行、连接管理、路由、备份恢复、网络诊断 |
+| 2. 网络代理与检测 | 网线主机代理、SSH 代理、手动开关、可选 APT/Git 联动、当前代理检测 |
+| 3. Git SSH 密钥辅助 | GitHub SSH 密钥生成/复用、配置与认证辅助、公钥文件查看 |
+
+代理分别使用 `wire_proxy_on/off` 和 `ssh_proxy_on/off`，新终端默认关闭。两种来源都影响当前终端和后来启动的应用；是否联动系统 APT、当前用户 Git 全局配置，在保存来源时分别选择。
+
+## 使用教程
+
+1. [主机与从机配置：通过主机共享上网](docs/01_主从机共享上网.md)
+2. [远程服务器通过 SSH 借用本机代理出口](docs/02_远程服务器SSH代理.md)
+3. [为远程服务器配置 Git SSH 密钥](docs/03_远程服务器Git密钥.md)
 
 ## 使用边界
 
 - 共享使用 IPv4 NAT，出口跟随主机系统路由。尚未实现下游独立出口、透明 VPN、强制 VPN、IPv6 共享、单无线网卡同时上行和热点、DHCP 静态租约管理。
 - 新连接先内存试运行，默认 180 秒内输入完整大写 `KEEP` 才保存；原生检查点不可用时停止。改 IP 可能中断 SSH，请保留本机或其他恢复通道。
 - 不自动接管 unmanaged 接口，不修改 Netplan renderer，不自动调整 Docker/UFW/nftables 策略。
-- `netpilot_proxy_on/off` 控制系统 APT 和当前终端的应用代理；其他终端、Git SSH、UDP/ICMP 和系统服务需要分别处理。
+- `wire_proxy_on/off`、`ssh_proxy_on/off` 设置当前 Bash 的应用代理；APT/Git 持久规则只按所选选项联动。其他终端、已有进程、Git SSH、UDP/ICMP 和系统服务需分别处理。
+- SSH 隧道与代理开关分别控制；新终端默认不设置代理。旧 `netpilot_proxy_on/off` 在迁移后是网线来源的兼容别名。
 - 备份、代理认证和诊断导出属于运行数据；私有权限不等于加密，仓库不包含这些文件。
 
 ## 分支
@@ -51,4 +52,4 @@ git switch --track origin/dev
 
 版本变化见 [CHANGELOG.md](CHANGELOG.md)。
 
-`AGENTS.md`、`CLAUDE.md`、`SHA256SUMS.txt` 和 `handoff.md` 为 `dev` 专用文件，不随 `main` 发布。继续开发前阅读 [dev 分支的交接文档](https://github.com/AllenW-Hiter/WBS-Netpilot/blob/dev/handoff.md)，了解已有实现、验证范围和待办。
+`SHA256SUMS.txt` 为 `dev` 专用校验清单，不随 `main` 发布。
