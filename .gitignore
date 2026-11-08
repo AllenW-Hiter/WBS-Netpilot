@@ -17,8 +17,27 @@ venv/
 *.swp
 *.swo
 *~
+
+# Local AI development instructions, settings and session history
+AGENTS.md
+AGENTS.override.md
+AGENTS.local.md
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
+handoff.md
 .agents/
 .codex/
+.claude/
+.gemini/
+.cursor/
+.cursorrules
+.windsurf/
+.windsurfrules
+.aider*
+.github/copilot-instructions.md
+.github/instructions/
+.github/prompts/
 
 # Local credentials and environment
 .env
@@ -44,6 +63,22 @@ state/
 proxy.json
 proxy.sh
 proxy.before-*
+codex-proxy.json
+codex-proxy.sh
+codex-ssh.json
+codex-ssh.before-*
+codex-backup-*/
+wire-proxy.json
+wire-proxy.sh
+ssh-proxy.json
+ssh-proxy.sh
+ssh-tunnel.json
+ssh-tunnel.before-*
+profiles-backup-*/
+proxy-session.json
+proxy-session.lock
+proxy-profile-owner.json
+git-proxy-active.config
 legacy-proxy-*/
 bashrc.before-*
 backup-file-list.txt

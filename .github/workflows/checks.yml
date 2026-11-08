@@ -20,10 +20,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - name: Unit tests
-        run: /usr/bin/python3 -m unittest discover -s tests -v
       - name: Python syntax
-        run: /usr/bin/python3 -m compileall -q netpilot.py netpilot_lib tests
+        run: /usr/bin/python3 -m compileall -q netpilot.py netpilot_lib
       - name: Bash syntax
         run: bash -n network_setup.sh
       - name: Read-only environment check

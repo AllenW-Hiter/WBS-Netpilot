@@ -1,5 +1,5 @@
 # This is documentation, NOT pip requirements and NOT an unconditional apt batch.
-# The launcher checks and asks before installing missing base packages.
+# The CLI checks and asks for missing packages only for the selected network operation.
 # Base (Ubuntu/Debian APT package names):
 python3
 python3-dbus
@@ -20,3 +20,5 @@ iputils-arping
 # iputils-ping
 # ethtool
 # dnsutils
+# SSH proxy: openssh-client and Bash (no NetworkManager needed; APT option needs root).
+# Install Codex CLI separately on the remote host; NetPilot does not install it.
